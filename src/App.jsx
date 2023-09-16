@@ -1,9 +1,17 @@
-import React from 'react'
+import { Canvas } from '@react-three/fiber'
+import { Grid, MapControls } from '@react-three/drei'
+import './App.css'
+import Town from './components/Town/Town'
 
-const App = () => {
+export default function App() {
+
   return (
-    <div>App</div>
+    <Canvas camera={{ position: [8, 4, 0]}}>
+      <ambientLight intensity={1} />
+      <directionalLight position={[0, 0, 3]} />
+      <Town/>
+      <Grid infiniteGrid={true} />
+      <MapControls/>
+    </Canvas>
   )
 }
-
-export default App
