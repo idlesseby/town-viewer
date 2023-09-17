@@ -1,48 +1,96 @@
-import React from 'react'
 import { useThree } from '@react-three/fiber'
 import * as THREE from 'three';
-import * as GEOLIB from 'geolib';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
+import getGPSRelativePos from '../../utils/getGPSRelativePos'
 
 const Town = () => {
   const { scene } = useThree()
 
-  //const center = [8.40443488854024, 49.0135090929862] Karlsruhe
-  const center = [8.363457824608531, 48.98510828866058] 
-  const material = new THREE.MeshPhongMaterial()
+  const buildings = []
+  const center = [8.404435881088258, 49.01349645754252] 
+  const buildingMaterial = new THREE.MeshPhongMaterial()
+  const lineMaterial = new THREE.LineBasicMaterial({color: 0x00ffff})
 
   const getGeoData = () => {
-    fetch('/oberreut.geojson')
+    fetch('/karlsruhe.geojson')
     .then(res => res.json())
     .then(data => {
-      //console.log(data)
-      loadBuildings(data)
+      loadElements(data)
     })
   }
 
-  const loadBuildings = (data) => {
+  const loadElements = (data) => {
     for(let feature of data.features) {
       if(!feature['properties']) return
 
-      if(feature.properties['building']) {
-        addBuilding(feature.geometry.coordinates, feature.properties, feature.properties['building:levels'])
+      let info = feature.properties
+
+      if(info['building']) {
+        addBuilding(feature.geometry.coordinates, info, info['building:levels'])
+      }
+
+      if(info['highway']) {
+        addRoad(feature.geometry.coordinates, info)
       }
     }
+
+    let mergeBuildings = BufferGeometryUtils.mergeGeometries(buildings)
+    let mergedBuildings = new THREE.Mesh(mergeBuildings, buildingMaterial)
+
+    scene.add(mergedBuildings)
   }
 
   const addBuilding = (data, info, height=1) => {
+    let shape, geometry
+    let holes = []
+
     for(let i = 0; i<data.length; i++) {
       let coord = data[i]
 
-      let shape = getShape(coord, center)
-      let geometry = getGeometry(shape, {curveSegments: 1, depth: 0.05 * height, bevelEnable: false})
-
-      geometry.rotateX(Math.PI * 1.5)
-      //geometry.rotateX(Math.PI / 2)
-
-      let mesh = new THREE.Mesh(geometry, material)
-
-      scene.add(mesh)
+      if(i === 0) {
+        shape = getShape(coord, center)
+      } else {
+        holes.push(getShape(coord, center))
+      }
     }
+
+    for(let i = 0;i<holes.length;i++) {
+      shape.holes.push(holes[i])
+    }
+
+    geometry = getGeometry(shape, {curveSegments: 1, depth: 0.15 * height, bevelEnable: false})
+    geometry.rotateX(Math.PI * 1.5)
+    geometry.rotateY(Math.PI * 3)
+
+    buildings.push(geometry)
+  }
+
+  const addRoad = (data, info) => {
+     let points = []
+
+     for(let i=0; i<data.length;i++) {
+        if(!data[0][1]) return
+
+        let coord = data[i]
+
+        if(coord.length != 2) return
+
+        let position = [coord[0], coord[1]]
+
+        position = getGPSRelativePos(position, center) // anstatt position einfach coord?
+
+        points.push(new THREE.Vector3(position[0], 0.5, position[1]))
+     }
+
+
+     let geometry = new THREE.BufferGeometry().setFromPoints(points)
+     geometry.rotateZ(Math.PI)
+
+     let line = new THREE.Line(geometry, lineMaterial)
+     line.info = info
+     line.computeLineDistances()
+
+     scene.add(line)
   }
 
   const getShape = (points, center) => {
@@ -51,7 +99,7 @@ const Town = () => {
     for(let i = 0; i<points.length; i++) {
       let position = points[i]
 
-      position = GPSRelativePos(position, center)
+      position = getGPSRelativePos(position, center)
 
       if(i==0) {
         shape.moveTo(position[0], position[1])
@@ -68,24 +116,6 @@ const Town = () => {
     geometry.computeBoundingBox()
 
     return geometry
-  }
-
-  const GPSRelativePos= (objPos, centerPos) => {
-
-    // Get GPS distance
-    let dis = GEOLIB.getDistance(objPos, centerPos)
-
-    // Get bearing angle
-    let bearing = GEOLIB.getRhumbLineBearing(objPos, centerPos)
-
-    // Calculate X by centerPos.x + distance * cos(rad)
-    let x = centerPos[0] + (dis * Math.cos(bearing * Math.PI / 180))
-
-    // Calculate Y by centerPos.x + distance * sin(rad)
-    let y = centerPos[1] + (dis * Math.sin(bearing * Math.PI / 180))
-
-    // Reverse X
-    return [-x/25, y/25]
   }
 
   return getGeoData()
