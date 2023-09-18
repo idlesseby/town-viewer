@@ -14,5 +14,5 @@ export default function getGPSRelativePos(objPos, centerPos) {
   let y = centerPos[1] + (dis * Math.sin(bearing * Math.PI / 180))
 
   // Reverse X
-  return [-x/20, y/20]
+  return [-x/10, y/10]
 }
