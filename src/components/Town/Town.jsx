@@ -8,15 +8,13 @@ const Town = () => {
 
   const buildings = []
   const waters = []
-  const grass = []
-  const center = [8.404426274741024, 49.01349564263273] 
-  const buildingMaterial = new THREE.MeshBasicMaterial({color: 0xeeeeee})
-  const waterMaterial = new THREE.MeshPhongMaterial({color: 0x0000ff})
-  const grassMaterial = new THREE.MeshPhongMaterial({color: 0x00ff00})
-  const lineMaterial = new THREE.LineBasicMaterial({color: 0x00ffff})
+  const center = [8.403572990602223, 49.00595544251649] 
+  const buildingMaterial = new THREE.MeshPhongMaterial()
+  const waterMaterial = new THREE.MeshPhongMaterial({color: 0x00ffff})
+  const lineMaterial = new THREE.LineBasicMaterial({color: 0xffce3f})
 
   const getGeoData = () => {
-    fetch('/karlsruhe.geojson')
+    fetch('/karlsruhe2.geojson')
     .then(res => res.json())
     .then(data => {
       loadElements(data)
@@ -32,7 +30,7 @@ const Town = () => {
 
       if(info['building']) {
         let shape = addObject(feature.geometry.coordinates)
-        let geometry = new THREE.ExtrudeGeometry(shape, {curveSegments: 1, depth: 0.5 * height, bevelEnable: false})
+        let geometry = new THREE.ExtrudeGeometry(shape, {curveSegments: 1, depth: 25 * height, bevelEnable: false})
         geometry.computeBoundingBox()
         geometry.rotateX(Math.PI * 1.5)
         geometry.rotateY(Math.PI * 3)
@@ -50,17 +48,6 @@ const Town = () => {
         waters.push(geometry)
       }
 
-      if(info['natural'] === 'wood' || info['landuse'] || info['leisure']) {
-        let shape = addObject(feature.geometry.coordinates)
-        let geometry = new THREE.ShapeGeometry(shape)
-        geometry.computeBoundingBox()
-        geometry.rotateX(Math.PI * 1.5)
-        geometry.rotateY(Math.PI * 3)
-
-        grass.push(geometry)
-      }
-
-
       if(info['highway']) {
         addRoad(feature.geometry.coordinates, info)
       }
@@ -73,11 +60,7 @@ const Town = () => {
     let mergedWaters = new THREE.Mesh(mergeWaters, waterMaterial)
     mergedWaters.position.set(0,-0.2,0)
 
-    let mergeGrass = BufferGeometryUtils.mergeGeometries(grass)
-    let mergedGrass = new THREE.Mesh(mergeGrass, grassMaterial)
-    mergedGrass.position.set(0,-0.25,0)
-
-    scene.add(mergedBuildings, mergedWaters, mergedGrass)
+    scene.add(mergedBuildings, mergedWaters)
   }
 
   const addObject = (data) => {
