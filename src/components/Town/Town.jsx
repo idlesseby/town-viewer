@@ -1,25 +1,33 @@
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import getGPSRelativePos from '../../utils/getGPSRelativePos'
+import { useEffect, useState, useRef } from 'react';
+import { Text } from '@react-three/drei';
 
 const Town = () => {
   const { scene } = useThree()
+  const lineMaterial = new THREE.LineBasicMaterial({color: 0xffce3f})
+  const ref = useRef()
 
+  const center = [8.403572990602223, 49.00595544251649] 
   const buildings = []
   const waters = []
-  const center = [8.403572990602223, 49.00595544251649] 
-  const buildingMaterial = new THREE.MeshPhongMaterial()
-  const waterMaterial = new THREE.MeshPhongMaterial({color: 0x00ffff})
-  const lineMaterial = new THREE.LineBasicMaterial({color: 0xffce3f})
+  const greens = []
+  const [mergedBuildings, setMergedBuildings] = useState()
+  const [mergedWaters, setMergedWaters] = useState()
+  const [mergedGreens, setMergedGreens] = useState()
 
-  const getGeoData = () => {
-    fetch('/karlsruhe2.geojson')
+  useEffect(() => {
+    fetch('/karlsruhe.geojson')
     .then(res => res.json())
     .then(data => {
       loadElements(data)
+      setMergedBuildings(BufferGeometryUtils.mergeGeometries(buildings))
+      setMergedWaters(BufferGeometryUtils.mergeGeometries(waters))
+      setMergedGreens(BufferGeometryUtils.mergeGeometries(greens))
     })
-  }
+  }, [])
 
   const loadElements = (data) => {
     for(let feature of data.features) {
@@ -31,36 +39,26 @@ const Town = () => {
       if(info['building']) {
         let shape = addObject(feature.geometry.coordinates)
         let geometry = new THREE.ExtrudeGeometry(shape, {curveSegments: 1, depth: 25 * height, bevelEnable: false})
-        geometry.computeBoundingBox()
-        geometry.rotateX(Math.PI * 1.5)
-        geometry.rotateY(Math.PI * 3)
-
         buildings.push(geometry)
+        addNames(feature.geometry.coordinates, info)
       }
 
       if(info['natural'] === 'water') {
         let shape = addObject(feature.geometry.coordinates)
         let geometry = new THREE.ShapeGeometry(shape)
-        geometry.computeBoundingBox()
-        geometry.rotateX(Math.PI * 1.5)
-        geometry.rotateY(Math.PI * 3)
-
         waters.push(geometry)
+      }
+
+      if(info['landuse'] || info['leisure']) {
+        let shape = addObject(feature.geometry.coordinates)
+        let geometry = new THREE.ShapeGeometry(shape)
+        greens.push(geometry)
       }
 
       if(info['highway']) {
         addRoad(feature.geometry.coordinates, info)
       }
     }
-
-    let mergeBuildings = BufferGeometryUtils.mergeGeometries(buildings)
-    let mergedBuildings = new THREE.Mesh(mergeBuildings, buildingMaterial)
-
-    let mergeWaters = BufferGeometryUtils.mergeGeometries(waters)
-    let mergedWaters = new THREE.Mesh(mergeWaters, waterMaterial)
-    mergedWaters.position.set(0,-0.2,0)
-
-    scene.add(mergedBuildings, mergedWaters)
   }
 
   const addObject = (data) => {
@@ -96,11 +94,10 @@ const Town = () => {
 
        let position = [coord[0], coord[1]]
 
-       position = getGPSRelativePos(position, center) // anstatt position einfach coord?
+       position = getGPSRelativePos(position, center)
 
        points.push(new THREE.Vector3(position[0], 0.5, position[1]))
     }
-
 
     let geometry = new THREE.BufferGeometry().setFromPoints(points)
     geometry.rotateZ(Math.PI)
@@ -113,6 +110,16 @@ const Town = () => {
 
     scene.add(line)
  }
+
+  const addNames = (data, info) => {
+    for(let i=0; i<data.length;i++) {
+      if(!info['name']) return
+
+      let coord = data[i]
+
+      let position = getGPSRelativePos(coord[0], center)
+    }
+  }
 
   const getShape = (points, center) => {
     let shape = new THREE.Shape()
@@ -132,7 +139,25 @@ const Town = () => {
     return shape
   }
 
-  return getGeoData()
+  useFrame(({ camera }) => {
+    ref.current.quaternion.copy(camera.quaternion)
+  })
+
+  return <>
+    <Text ref={ref} color="black" anchorX="center" anchorY="middle" fontSize={80}>hey</Text>
+
+    <mesh geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+      <meshPhongMaterial color={0xFFFAFA} />
+    </mesh>
+
+    <mesh geometry={mergedWaters} position={[0,-0.2,0]} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+      <meshPhongMaterial color={0x00ffff} />
+    </mesh>
+
+    <mesh geometry={mergedGreens} position={[0,-0.5,0]} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+      <meshPhongMaterial color={0xc1f376} />
+    </mesh>
+  </>
 }
 
 export default Town
