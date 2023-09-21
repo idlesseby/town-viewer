@@ -1,20 +1,23 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useThree } from '@react-three/fiber'
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import getGPSRelativePos from '../../utils/getGPSRelativePos'
-import { useEffect, useState, useRef } from 'react';
-import { Text } from '@react-three/drei';
+import { useEffect, useState } from 'react';
+import Names from './Names';
 
 const Town = () => {
   const { scene } = useThree()
   const lineMaterial = new THREE.LineBasicMaterial({color: 0xffce3f})
-  const ref = useRef()
 
   const center = [8.403572990602223, 49.00595544251649] 
   const buildings = []
+  const buildingPos = []
+  const buildingNames = []
   const waters = []
   const greens = []
   const [mergedBuildings, setMergedBuildings] = useState()
+  const [buildingsPos, setBuildingsPos] = useState([])
+  const [buildingsName, setBuildingsName] = useState([])
   const [mergedWaters, setMergedWaters] = useState()
   const [mergedGreens, setMergedGreens] = useState()
 
@@ -26,6 +29,8 @@ const Town = () => {
       setMergedBuildings(BufferGeometryUtils.mergeGeometries(buildings))
       setMergedWaters(BufferGeometryUtils.mergeGeometries(waters))
       setMergedGreens(BufferGeometryUtils.mergeGeometries(greens))
+      setBuildingsPos(buildingPos)
+      setBuildingsName(buildingNames)
     })
   }, [])
 
@@ -34,13 +39,13 @@ const Town = () => {
       if(!feature['properties']) return
 
       let info = feature.properties
-      let height = info['building:levels'] ? info['building:levels'] : 1
+      let height = info['building:levels'] ? info['building:levels'] * 25 : 50
 
       if(info['building']) {
+        addNames(feature.geometry.coordinates, info, height)
         let shape = addObject(feature.geometry.coordinates)
-        let geometry = new THREE.ExtrudeGeometry(shape, {curveSegments: 1, depth: 25 * height, bevelEnable: false})
+        let geometry = new THREE.ExtrudeGeometry(shape, {curveSegments: 1, depth: height, bevelEnable: false})
         buildings.push(geometry)
-        addNames(feature.geometry.coordinates, info)
       }
 
       if(info['natural'] === 'water') {
@@ -111,13 +116,18 @@ const Town = () => {
     scene.add(line)
  }
 
-  const addNames = (data, info) => {
+  const addNames = (data, info, height) => {
     for(let i=0; i<data.length;i++) {
       if(!info['name']) return
 
       let coord = data[i]
 
       let position = getGPSRelativePos(coord[0], center)
+
+      position = new THREE.Vector3(-position[0], height + 100, position[1])
+      
+      buildingPos.push(position)
+      buildingNames.push(info['name'])
     }
   }
 
@@ -139,12 +149,10 @@ const Town = () => {
     return shape
   }
 
-  useFrame(({ camera }) => {
-    ref.current.quaternion.copy(camera.quaternion)
-  })
-
   return <>
-    <Text ref={ref} color="black" anchorX="center" anchorY="middle" fontSize={80}>hey</Text>
+    {buildingsName[0] != 0 ? buildingsName.map((building, i) => {
+      return <Names key={i} name={building} position={buildingsPos[i]} />
+    }) : null}
 
     <mesh geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
       <meshPhongMaterial color={0xFFFAFA} />
