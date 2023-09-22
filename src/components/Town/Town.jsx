@@ -3,34 +3,31 @@ import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import getGPSRelativePos from '../../utils/getGPSRelativePos'
 import { useEffect, useState } from 'react';
-import Names from './Names';
+import Annotation from './Annotation';
 
 const Town = () => {
   const { scene } = useThree()
-  const lineMaterial = new THREE.LineBasicMaterial({color: 0xffce3f})
+  const lineMaterial = new THREE.LineBasicMaterial({color: 0xFFCACA})
 
   const center = [8.403572990602223, 49.00595544251649] 
   const buildings = []
-  const buildingPos = []
-  const buildingNames = []
+  const buildingsInfo = []
   const waters = []
   const greens = []
   const [mergedBuildings, setMergedBuildings] = useState()
-  const [buildingsPos, setBuildingsPos] = useState([])
-  const [buildingsName, setBuildingsName] = useState([])
+  const [buildingsInfos, setBuildingsInfos] = useState([])
   const [mergedWaters, setMergedWaters] = useState()
   const [mergedGreens, setMergedGreens] = useState()
 
   useEffect(() => {
-    fetch('/karlsruhe2.geojson')
+    fetch('/karlsruhe.geojson')
     .then(res => res.json())
     .then(data => {
       loadElements(data)
       setMergedBuildings(BufferGeometryUtils.mergeGeometries(buildings))
       setMergedWaters(BufferGeometryUtils.mergeGeometries(waters))
       setMergedGreens(BufferGeometryUtils.mergeGeometries(greens))
-      setBuildingsPos(buildingPos)
-      setBuildingsName(buildingNames)
+      setBuildingsInfos(buildingsInfo)
     })
   }, [])
 
@@ -55,6 +52,7 @@ const Town = () => {
       }
 
       if(info['landuse'] || info['leisure']) {
+        addNames(feature.geometry.coordinates, info, height)
         let shape = addObject(feature.geometry.coordinates)
         let geometry = new THREE.ShapeGeometry(shape)
         greens.push(geometry)
@@ -63,6 +61,7 @@ const Town = () => {
       if(info['highway']) {
         addRoad(feature.geometry.coordinates, info)
       }
+      
     }
   }
 
@@ -117,19 +116,31 @@ const Town = () => {
  }
 
   const addNames = (data, info, height) => {
-    for(let i=0; i<data.length;i++) {
-      if(!info['wikipedia']) return
+    for(let i=0;i<data.length;i++) {
       if(!info['name'] ) return
-      if(buildingNames.includes(info['name'])) return
+      if(!info['wikipedia']) return
+      if(buildingsInfo.filter(item => item.name === info['name']).length > 0) return
 
       let coord = data[i]
 
-      let position = getGPSRelativePos(coord[0], center)
+      // Temporary solution
+      let oppositeCoord = coord[Math.ceil((coord.length -1) * 0.5)]
+      
+      let centeredCoord = [
+        // Subtract the difference between the two opposite building points
+        coord[0][0] - ((coord[0][0] - oppositeCoord[0]) * 0.5),
+        coord[0][1] - ((coord[0][1] - oppositeCoord[1]) * 0.5)
+      ]
+
+      let position = getGPSRelativePos(centeredCoord, center)
 
       position = new THREE.Vector3(-position[0], height + 100, position[1])
 
-      buildingPos.push(position)
-      buildingNames.push(info['name'])
+      buildingsInfo.push({
+        position: position,
+        name: info['name'],
+        wiki: info['wikipedia'],
+      })
     }
   }
 
@@ -152,8 +163,8 @@ const Town = () => {
   }
 
   return <>
-    {buildingsName[0] != 0 ? buildingsName.map((building, i) => {
-      return <Names key={i} name={building} position={buildingsPos[i]} />
+    {buildingsInfos[0] != 0 ? buildingsInfos.map((building, i) => {
+      return <Annotation key={i} name={building.name} position={building.position} wiki={building.wiki} />
     }) : null}
 
     <mesh geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
