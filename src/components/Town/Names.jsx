@@ -10,7 +10,17 @@ const Names = ({name, position}) => {
   })
 
   return (
-    <Text ref={ref} color={0x333333} position={position} anchorX="center" anchorY="middle" fontSize={32}>{name}</Text>
+    <Text 
+      ref={ref} 
+      color={0x222222} 
+      position={position} 
+      anchorX="center" 
+      anchorY="middle" 
+      fontSize={50}
+      onClick={() => console.log(name)}
+    >
+      {name}
+    </Text>
   )
 }
 

@@ -22,7 +22,7 @@ const Town = () => {
   const [mergedGreens, setMergedGreens] = useState()
 
   useEffect(() => {
-    fetch('/karlsruhe.geojson')
+    fetch('/karlsruhe2.geojson')
     .then(res => res.json())
     .then(data => {
       loadElements(data)
@@ -118,14 +118,16 @@ const Town = () => {
 
   const addNames = (data, info, height) => {
     for(let i=0; i<data.length;i++) {
-      if(!info['name']) return
+      if(!info['wikipedia']) return
+      if(!info['name'] ) return
+      if(buildingNames.includes(info['name'])) return
 
       let coord = data[i]
 
       let position = getGPSRelativePos(coord[0], center)
 
       position = new THREE.Vector3(-position[0], height + 100, position[1])
-      
+
       buildingPos.push(position)
       buildingNames.push(info['name'])
     }
@@ -155,7 +157,7 @@ const Town = () => {
     }) : null}
 
     <mesh geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshPhongMaterial color={0xFFFAFA} />
+      <meshPhongMaterial color={0xffffff} />
     </mesh>
 
     <mesh geometry={mergedWaters} position={[0,-0.2,0]} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
