@@ -23,7 +23,7 @@ const Annotation = ({name, position, wiki}) => {
       <Html
         scale={100}
         transform
-        style={{ transition: 'all 0.3s', opacity: isVisible ? 1 : 0, transform: `scale(${isVisible ? 1 : 0.25})`}}
+        style={{ transition: 'all 0.3s', opacity: isVisible ? 1 : 0, transform: `scale(${isVisible ? 1 : 0.25}) translateY(${isVisible ? '-100%' : '0%'})`}}
       >
         <div className='container' onClick={() => console.log(wiki)}>
           <p>{name}</p>

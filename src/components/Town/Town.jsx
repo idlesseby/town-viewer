@@ -36,7 +36,19 @@ const Town = () => {
       if(!feature['properties']) return
 
       let info = feature.properties
-      let height = info['building:levels'] ? info['building:levels'] * 25 : 50
+      let height
+      if(info['building'] === 'shed') {
+        height = 25 
+      } 
+      else if(info['height']) {
+        height = info['height'] * 5
+      }
+      else if(info['building:levels'] && !info['height']) {
+        height = info['building:levels'] * 25
+      }
+      else {
+        height = 75
+      }
 
       if(info['building']) {
         addNames(feature.geometry.coordinates, info, height)
@@ -134,7 +146,7 @@ const Town = () => {
 
       let position = getGPSRelativePos(centeredCoord, center)
 
-      position = new THREE.Vector3(-position[0], height + 100, position[1])
+      position = new THREE.Vector3(-position[0], height + 25, position[1])
 
       buildingsInfo.push({
         position: position,
