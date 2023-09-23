@@ -179,16 +179,16 @@ const Town = () => {
       return <Annotation key={i} name={building.name} position={building.position} wiki={building.wiki} />
     }) : null}
 
-    <mesh geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshPhongMaterial color={0xffffff} />
+    <mesh castShadow geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+      <meshStandardMaterial color={0xffffff} envMapIntensity={0.9}/>
     </mesh>
 
-    <mesh geometry={mergedWaters} position={[0,-0.2,0]} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshPhongMaterial color={0x00ffff} />
+    <mesh geometry={mergedWaters} position-y={-0.2} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+      <meshStandardMaterial color={0x00ffff} envMapIntensity={0.9}/>
     </mesh>
 
-    <mesh geometry={mergedGreens} position={[0,-0.5,0]} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshPhongMaterial color={0xc1f376} />
+    <mesh geometry={mergedGreens} position-y={-2} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+      <meshStandardMaterial color={0xc1f376} envMapIntensity={0.9}/>
     </mesh>
   </>
 }
