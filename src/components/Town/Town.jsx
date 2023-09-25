@@ -1,12 +1,15 @@
-import { useThree } from '@react-three/fiber'
+import {  useThree } from '@react-three/fiber'
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import getGPSRelativePos from '../../utils/getGPSRelativePos'
 import { useEffect, useState } from 'react';
-import Annotation from './Annotation';
+import Annotation from '../Annotation/Annotation';
+import { useSnapshot } from 'valtio'
+import { state } from '../../data/store'
 
 const Town = () => {
-  const { scene } = useThree()
+  const snap = useSnapshot(state)
+  const { scene, camera } = useThree()
   const lineMaterial = new THREE.LineBasicMaterial({color: 0xFFCACA})
 
   const center = [8.403572990602223, 49.00595544251649] 
@@ -30,6 +33,10 @@ const Town = () => {
       setBuildingsInfos(buildingsInfo)
     })
   }, [])
+
+  useEffect(() => {
+    camera.position.set(...snap.cameraPos)
+  },[snap.cameraPos])
 
   const loadElements = (data) => {
     for(let feature of data.features) {
@@ -183,11 +190,11 @@ const Town = () => {
       <meshStandardMaterial color={0xffffff} envMapIntensity={0.9}/>
     </mesh>
 
-    <mesh geometry={mergedWaters} position-y={-0.2} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+    <mesh geometry={mergedWaters} position-y={-1} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
       <meshStandardMaterial color={0x00ffff} envMapIntensity={0.9}/>
     </mesh>
 
-    <mesh geometry={mergedGreens} position-y={-2} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
+    <mesh geometry={mergedGreens} position-y={-3.5} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
       <meshStandardMaterial color={0xc1f376} envMapIntensity={0.9}/>
     </mesh>
   </>
