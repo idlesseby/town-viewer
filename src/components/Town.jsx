@@ -1,15 +1,12 @@
 import {  useThree } from '@react-three/fiber'
 import * as THREE from 'three';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
-import getGPSRelativePos from '../../utils/getGPSRelativePos'
+import getGPSRelativePos from '../utils/getGPSRelativePos'
 import { useEffect, useState } from 'react';
-import Annotation from '../Annotation/Annotation';
-import { useSnapshot } from 'valtio'
-import { state } from '../../data/store'
+import Annotation from './Annotation/Annotation';
 
-const Town = () => {
-  const snap = useSnapshot(state)
-  const { scene, camera } = useThree()
+const Town = ({data}) => {
+  const { scene } = useThree()
   const lineMaterial = new THREE.LineBasicMaterial({color: 0xFFCACA})
 
   const center = [8.403572990602223, 49.00595544251649] 
@@ -23,20 +20,12 @@ const Town = () => {
   const [mergedGreens, setMergedGreens] = useState()
 
   useEffect(() => {
-    fetch('/karlsruhe.geojson')
-    .then(res => res.json())
-    .then(data => {
-      loadElements(data)
-      setMergedBuildings(BufferGeometryUtils.mergeGeometries(buildings))
-      setMergedWaters(BufferGeometryUtils.mergeGeometries(waters))
-      setMergedGreens(BufferGeometryUtils.mergeGeometries(greens))
-      setBuildingsInfos(buildingsInfo)
-    })
+    loadElements(data)
+    setMergedBuildings(BufferGeometryUtils.mergeGeometries(buildings))
+    setMergedWaters(BufferGeometryUtils.mergeGeometries(waters))
+    setMergedGreens(BufferGeometryUtils.mergeGeometries(greens))
+    setBuildingsInfos(buildingsInfo)
   }, [])
-
-  useEffect(() => {
-    camera.position.set(...snap.cameraPos)
-  },[snap.cameraPos])
 
   const loadElements = (data) => {
     for(let feature of data.features) {
@@ -80,7 +69,6 @@ const Town = () => {
       if(info['highway']) {
         addRoad(feature.geometry.coordinates, info)
       }
-      
     }
   }
 
@@ -153,7 +141,7 @@ const Town = () => {
 
       let position = getGPSRelativePos(centeredCoord, center)
 
-      position = new THREE.Vector3(-position[0], height + 25, position[1])
+      position = new THREE.Vector3(-position[0], height + 35, position[1])
 
       buildingsInfo.push({
         position: position,
@@ -182,6 +170,11 @@ const Town = () => {
   }
 
   return <>
+    <mesh receiveShadow scale={20000} position-y={-5} rotation-x={ -Math.PI * 0.5 }>
+      <planeGeometry/>
+      <meshStandardMaterial color={0xFFF6F6} envMapIntensity={0.9}/>
+    </mesh>
+
     {buildingsInfos[0] != 0 ? buildingsInfos.map((building, i) => {
       return <Annotation key={i} name={building.name} position={building.position} wiki={building.wiki} />
     }) : null}

@@ -7,7 +7,7 @@ import './Annotation.css'
 const Annotation = ({name, position, wiki}) => {
   const ref = useRef()
 
-  const [isInRange, setInRange] = useState(true)
+  const [isInRange, setInRange] = useState(false)
   const isVisible = isInRange
 
   const vec = new THREE.Vector3()
