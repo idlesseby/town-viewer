@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {  useThree } from '@react-three/fiber'
-import { Environment, MapControls, Sky } from '@react-three/drei'
+import { Environment, Lightformer, MapControls, Sky } from '@react-three/drei'
 import { Perf } from 'r3f-perf'
 import { useSnapshot } from 'valtio'
 import { state } from '../data/store'
@@ -31,9 +31,12 @@ const Experience = () => {
     <group>
       <Perf />
 
-      <Environment preset='sunset'/>
+      <Environment files="./forgotten_miniland_1k.hdr">
+        <Lightformer intensity={0.75} position={[0,1,0]} scale={[1,1,1]} rotation-x={Math.PI/2} color='lightblue' />
+        <Lightformer intensity={0.5} position={[0,0.5,-1]} scale={[1,1,1]} rotation-x={Math.PI/2} color='tomato' />
+      </Environment>
 
-      <Sky distance={30000} sunPosition={[1,1,0]}/>
+      <Sky distance={35000} sunPosition={[1,1,0.5]}/>
 
       <MapControls/>
 

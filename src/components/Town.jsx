@@ -172,7 +172,7 @@ const Town = ({data}) => {
   return <>
     <mesh receiveShadow scale={20000} position-y={-5} rotation-x={ -Math.PI * 0.5 }>
       <planeGeometry/>
-      <meshStandardMaterial color={0xFFF6F6} envMapIntensity={0.9}/>
+      <meshStandardMaterial color={0xFFF6F6} envMapIntensity={1}/>
     </mesh>
 
     {buildingsInfos[0] != 0 ? buildingsInfos.map((building, i) => {
@@ -180,15 +180,15 @@ const Town = ({data}) => {
     }) : null}
 
     <mesh castShadow geometry={mergedBuildings} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshStandardMaterial color={0xffffff} envMapIntensity={0.9}/>
+      <meshStandardMaterial color={0xffffff} envMapIntensity={0.85}/>
     </mesh>
 
     <mesh geometry={mergedWaters} position-y={-1} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshStandardMaterial color={0x00ffff} envMapIntensity={0.9}/>
+      <meshStandardMaterial color={0x94e6ff} envMapIntensity={1}/>
     </mesh>
 
     <mesh geometry={mergedGreens} position-y={-3.5} rotation={[Math.PI * 2.5, Math.PI * 3, 0]}>
-      <meshStandardMaterial color={0xc1f376} envMapIntensity={0.9}/>
+      <meshStandardMaterial color={0x96f253} envMapIntensity={1}/>
     </mesh>
   </>
 }
